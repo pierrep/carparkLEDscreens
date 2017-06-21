@@ -1,0 +1,9 @@
+<SETTINGS>
+		<PORTS>
+			<SERIAL0>/dev/ttyACM0</SERIAL0>
+			<SERIAL1>/dev/ttyACM1</SERIAL1>
+			<SERIAL2>/dev/ttyACM2</SERIAL2>
+			<SERIAL3>/dev/ttyACM3</SERIAL3>
+			<SERIAL4>/dev/ttyACM4</SERIAL4>
+		</PORTS>
+</SETTINGS>

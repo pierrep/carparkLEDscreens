@@ -1,0 +1,4 @@
+bin/carparkLEDscreens
+bin/carparkLEDscreens_debug
+build/
+carparkLEDscreens.qbs.user
