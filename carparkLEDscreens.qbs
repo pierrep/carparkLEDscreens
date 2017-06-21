@@ -12,11 +12,11 @@ Project{
         name: { return FileInfo.baseName(path) }
 
         files: [
-            'src/WordPoetry.cpp',
-            'src/WordPoetry.h',
-            'src/main.cpp',
-            'src/ofApp.cpp',
-            'src/ofApp.h',
+            "src/CalendarWidget.cpp",
+            "src/CalendarWidget.h",
+            "src/main.cpp",
+            "src/ofApp.cpp",
+            "src/ofApp.h",
         ]
 
         of.addons: [

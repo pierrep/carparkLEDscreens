@@ -3,119 +3,120 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
    // ofSetLogLevel(OF_LOG_VERBOSE);
-	bSendSerialMessage = false;
-	
-	loadSettings();
-	serial[0].listDevices();
-	//vector <ofSerialDeviceInfo> deviceList = serial[0].getDeviceList();
-    int baud = 115200;
+    ofSetFrameRate(30);
 
     bUseXbee = false;
     bUseSerial = false;
 
+	loadSettings();
+    int baud = 115200;
+
     if(bUseSerial) {
-        bUseSerial = serial[0].setup(serialName[0], baud); //linux example
-		bUseSerial = serial[1].setup(serialName[1], baud); //linux example	
-		bUseSerial = serial[2].setup(serialName[2], baud); //linux example			
-		bUseSerial = serial[3].setup(serialName[3], baud); //linux example	
-		bUseSerial = serial[4].setup(serialName[4], baud); //linux example	
+        bUseSerial = serial[0].setup(serialName[0], baud);
+        bUseSerial = serial[1].setup(serialName[1], baud);
+        bUseSerial = serial[2].setup(serialName[2], baud);
 							
         unsigned char buf[10];
         serial[0].writeBytes(buf,10);
         serial[1].writeBytes(buf,10);
-        serial[2].writeBytes(buf,10);
-        serial[3].writeBytes(buf,10);
-        serial[4].writeBytes(buf,10);              
+        serial[2].writeBytes(buf,10);             
     }
 
-    if(bUseXbee) {
-        xbee.setup("/dev/ttyUSB0",9600);
-    }
+    writeWord(0,"testing screen 1");
+    writeWord(1,"testing screen 2");
+    writeWord(2,"testing screen 3");
 
-    poetry.setup();
+    setupCalendar();
+}
 
+//--------------------------------------------------------------
+void ofApp::setupCalendar()
+{
+    // currently basic.ics is being downloaded from here
+    // "https://www.google.com/calendar/ical/christopherbaker.net_91ul9n5dq2b6pkmin511q3bq14%40group.calendar.google.com/public/basic.ics";
+
+    // update it every minute
+    calendar = ICalendar::makeShared("https://calendar.google.com/calendar/ical/d8fpibcns53u907i6eedo65nu0%40group.calendar.google.com/private-d699b602410a90afdcbe206673832aba/basic.ics", 6000);
+
+    calendar->reload();
+    calendar->startThread();
+
+    watcher = ICalendarWatcher::makeShared(calendar);
+
+    watcher->registerAllEvents(this); // register this class for all events
+
+    // set up the watcher
+    ofRectangle window;
+    window.setFromCenter(ofGetWidth() / 2, ofGetHeight() / 2, 480, ofGetHeight()-80);
+    calendarWidget = CalendarWidget::makeShared(calendar, window);
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
 	
-	if (bSendSerialMessage){
-		
-        writeWord(0);
-        writeWord(1);
-        writeWord(2);
-        writeWord(3);
-        writeWord(4);
-		bSendSerialMessage = false;
 
-	}
-	
-
-    if(bUseXbee) {
-        int myByte = 0;
-        myByte = xbee.readByte();
-        if ( myByte == OF_SERIAL_NO_DATA )
-          //ofLogNotice() << "no data was read";
-          ;
-        else if ( myByte == OF_SERIAL_ERROR )
-          ofLogNotice() << "an Xbee serial error occurred";
-        else {
-          //ofLogNotice() << "byte received is: " << myByte;
-          if(myByte == 3) {
-            writeWord(0);
-          } else if (myByte == 2) {
-            writeWord(1);
-          } else if (myByte == 1) {
-            writeWord(2);
-          } else if (myByte == 4) {
-            writeWord(3);
-          }	else if (myByte == 5) {
-            writeWord(4);
-          }
-        }
-    }
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
 
-	ofSetColor(0);
-    ofDrawBitmapString("click to test serial.",20,20);
-    for(int i = 0 ;i < 5;i++) {
+    ofBackgroundGradient(ofColor::white, ofColor::black);
+
+    if (calendarWidget)
+    {
+        calendarWidget->draw();
+    }
+
+    int y = 50;
+
+    std::deque<std::string>::const_iterator iter = messages.begin();
+
+    ofDrawBitmapStringHighlight("Events:", 20, y);
+
+    y += 10;
+
+    while (iter != messages.end())
+    {
+        y += 14;
+
+        ofDrawBitmapString(*iter, 20, y);
+
+        if (y > ofGetHeight()) break;
+
+        ++iter;
+    }
+
+    ofSetColor(255,0,0);
+   // ofDrawBitmapString("click to test serial.",20,20);
+
+    for(int i = 0 ;i < NUM_SCREENS;i++) {
 		
-		ofDrawBitmapString(w[i],100 * i+20, 100);
+        ofDrawBitmapString(content[i],300 * i+20, 20);
 	}
 }
 
 //--------------------------------------------------------------
-void ofApp::writeWord(int index)
+void ofApp::writeWord(int index, string newstring)
 {    
-	w[index] = poetry.getWord(index);
-	while(w[index].length() > 10) 
-	{
-		w[index] = poetry.getWord(index);
-	}
+    content[index] = newstring;
 			
-    ofLogNotice() << "Word: " << w[index];
-    if(bUseSerial) {
-        unsigned char buf[10];
-        for(unsigned int i = 0; i < w[index].length();i++)
+    ofLogNotice() << "screen" << index << ": " << content[index];
+    
+    if(bUseSerial)
+    {
+        unsigned char buf[255];
+        for(unsigned int i = 0; i < content[index].length();i++)
         {
-            buf[i] = w[index].c_str()[i];
+            buf[i] = content[index].c_str()[i];
         }
         if(index == 0)
-			serial[0].writeBytes(buf,w[index].length());
+            serial[0].writeBytes(buf,content[index].length());
 		else if(index == 1)
-			serial[1].writeBytes(buf,w[index].length());
+            serial[1].writeBytes(buf,content[index].length());
 		else if(index == 2)
-			serial[2].writeBytes(buf,w[index].length());
-		else if(index == 3)
-			serial[3].writeBytes(buf,w[index].length());
-		else if(index == 4)
-			serial[4].writeBytes(buf,w[index].length());									
+            serial[2].writeBytes(buf,content[index].length());
     }
 }
-
 
 //--------------------------------------------------------------
 void ofApp::loadSettings()
@@ -142,83 +143,118 @@ void ofApp::loadSettings()
         serialName[2] 	= xml.getValue<string>("//SERIAL2");
     } else {
         serialName[2]  = "/dev/ttyACM2";
-    }	
-    
-    if(xml.exists("//SERIAL3")) {
-        serialName[3] 	= xml.getValue<string>("//SERIAL3");
-    } else {
-        serialName[3]  = "/dev/ttyACM3";
-    }	    
-
-    if(xml.exists("//SERIAL4")) {
-        serialName[4] 	= xml.getValue<string>("//SERIAL4");
-    } else {
-        serialName[4]  = "/dev/ttyACM4";
-    }	  
+    }		  
         
-    for(int i = 0; i < NUM_WORDS; i++) {
+    for(int i = 0; i < NUM_SCREENS; i++) {
 		ofLogNotice("loadSettings") << "Port " << i << ": " << serialName[i] ;
 	}
 }
 
 //--------------------------------------------------------------
 void ofApp::keyPressed  (int key){ 
-	if(key == '1') writeWord(0);
-	if(key == '2') writeWord(1);
-	if(key == '3') writeWord(2);
-	if(key == '4') writeWord(3);
-	if(key == '5') writeWord(4);
-	//bSendSerialMessage = true;
-}
+    if(key == '1') writeWord(0,"testing screen 1");
+    if(key == '2') writeWord(1,"testing screen 2");
+    if(key == '3') writeWord(2,"testing screen 3");
 
-//--------------------------------------------------------------
-void ofApp::keyReleased(int key){ 
-	
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseMoved(int x, int y){
-	
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseDragged(int x, int y, int button){
-	
 }
 
 //--------------------------------------------------------------
 void ofApp::mousePressed(int x, int y, int button)
 {
-	bSendSerialMessage = true;
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseReleased(int x, int y, int button){
-	
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseEntered(int x, int y){
 
 }
 
 //--------------------------------------------------------------
-void ofApp::mouseExited(int x, int y){
+void ofApp::gotMessage(ofMessage msg)
+{
+    messages.push_front(msg.message);
 
+    while (messages.size() > MAX_MESSAGES)
+    {
+        messages.pop_back(); // throw away the oldest.
+    }
 }
 
 //--------------------------------------------------------------
-void ofApp::windowResized(int w, int h){
-	
+void ofApp::processInstance(const ICalendarEventInstance& instance)
+{
+    if (instance.isValidEventInstance())
+    {
+        std::string description = instance.getEvent().getDescription();
+
+        std::vector<std::string> lines = ofSplitString(description, "\n", true, true);
+
+        std::vector<std::string>::iterator iter = lines.begin();
+
+        while (iter != lines.end())
+        {
+            std::vector<std::string> tokens = ofSplitString(*iter, "=", true, true);
+
+            if (tokens.size() == 2)
+            {
+                if ((tokens[0] == "screen1") || (tokens[0] == "SCREEN1"))
+                {
+                   writeWord(0,tokens[1]);
+                }
+                else if ((tokens[0] == "screen2") || (tokens[0] == "SCREEN2"))
+                {
+                   writeWord(1,tokens[1]);
+                }
+                else if ((tokens[0] == "screen3") || (tokens[0] == "SCREEN3"))
+                {
+                   writeWord(2,tokens[1]);
+                }
+                else
+                {
+                    ofLogError("ofApp::processInstance") << "Unknown key.";
+                }
+            }
+
+            ++iter;
+        }
+    }
 }
 
 //--------------------------------------------------------------
-void ofApp::gotMessage(ofMessage msg){
-	
+void ofApp::onCalendarWatcherEventAdded(const ICalendarEventInstance& instance)
+{
+    ofSendMessage("ADDED: " + instance.getEvent().getSummary() );
+
+    processInstance(instance);
 }
 
 //--------------------------------------------------------------
-void ofApp::dragEvent(ofDragInfo dragInfo){ 
-	
+void ofApp::onCalendarWatcherEventRemoved(const ICalendarEventInstance& instance)
+{
+    // note, there is a good chance this event will be invalid
+    ofSendMessage("REMOVED: " + instance.getEvent().getUID());
+}
+
+//--------------------------------------------------------------
+void ofApp::onCalendarWatcherEventModified(const ICalendarEventInstance& instance)
+{
+    ofSendMessage("MODIFIED: " + instance.getEvent().getSummary() );
+
+    processInstance(instance);
+}
+
+//--------------------------------------------------------------
+void ofApp::onCalendarWatcherEventStarted(const ICalendarEventInstance& instance)
+{
+    ofSendMessage("STARTED: " + instance.getEvent().getSummary() );
+
+    processInstance(instance);
+}
+
+//--------------------------------------------------------------
+void ofApp::onCalendarWatcherEventEnded(const ICalendarEventInstance& instance)
+{
+    ofSendMessage("ENDED: " + instance.getEvent().getSummary() );
+}
+
+//--------------------------------------------------------------
+void ofApp::onCalendarWatcherError(const Poco::Exception& exception)
+{
+    ofSendMessage("ERROR: " + exception.displayText());
 }
 
