@@ -76,8 +76,8 @@
 # add a runtime path to search for those shared libraries, since they aren't 
 # incorporated directly into the final executable application binary.
 ################################################################################
-# PROJECT_LDFLAGS=-Wl,-rpath=./libs
-
+PROJECT_LDFLAGS=-Wl,-rpath=./libs
+PROJECT_LDFLAGS += -lical
 ################################################################################
 # PROJECT DEFINES
 #   Create a space-delimited list of DEFINES. The list will be converted into 
