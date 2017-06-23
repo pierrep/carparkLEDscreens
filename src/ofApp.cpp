@@ -38,7 +38,8 @@ void ofApp::setupCalendar()
     // "https://www.google.com/calendar/ical/christopherbaker.net_91ul9n5dq2b6pkmin511q3bq14%40group.calendar.google.com/public/basic.ics";
 
     // update it every minute
-    calendar = ICalendar::makeShared("https://calendar.google.com/calendar/ical/d8fpibcns53u907i6eedo65nu0%40group.calendar.google.com/private-d699b602410a90afdcbe206673832aba/basic.ics", 6000);
+    //calendar = ICalendar::makeShared("https://calendar.google.com/calendar/ical/d8fpibcns53u907i6eedo65nu0%40group.calendar.google.com/private-d699b602410a90afdcbe206673832aba/basic.ics", 6000);
+    calendar = ICalendar::makeShared("https://calendar.google.com/calendar/ical/g3onnkiiiadekb12ap491b8u4k%40group.calendar.google.com/private-c898ee38be7b00d3b41200a888b73932/basic.ics", 6000);
 
     calendar->reload();
     calendar->startThread();
