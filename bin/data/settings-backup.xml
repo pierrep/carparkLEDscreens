@@ -1,0 +1,12 @@
+<SETTINGS>
+		<PORTS>
+			<SERIAL0>/dev/ttyACM0</SERIAL0>
+			<SERIAL1>/dev/ttyACM1</SERIAL1>
+			<SERIAL2>/dev/ttyACM2</SERIAL2>
+		</PORTS>
+                <CONTENT>
+                    <SCREEN1>THE CONTENT IS LIVE</SCREEN1>
+                    <SCREEN2>This is screen 2</SCREEN2>
+                    <SCREEN3>And Screen Three</SCREEN3>
+                </CONTENT>
+</SETTINGS>

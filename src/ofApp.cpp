@@ -1,6 +1,12 @@
 #include "ofApp.h"
 
 //--------------------------------------------------------------
+void ofApp::exit()
+{
+    saveXmlSettings();
+}
+
+//--------------------------------------------------------------
 void ofApp::setup(){
    // ofSetLogLevel(OF_LOG_VERBOSE);
     ofSetFrameRate(30);
@@ -8,7 +14,7 @@ void ofApp::setup(){
     bUseXbee = false;
     bUseSerial = false;
 
-	loadSettings();
+    loadSerialSettings();
     int baud = 115200;
 
     if(bUseSerial) {
@@ -19,12 +25,8 @@ void ofApp::setup(){
         unsigned char buf[10];
         serial[0].writeBytes(buf,10);
         serial[1].writeBytes(buf,10);
-        serial[2].writeBytes(buf,10);             
+        serial[2].writeBytes(buf,10);
     }
-
-    writeWord(0,"testing screen 1");
-    writeWord(1,"testing screen 2");
-    writeWord(2,"testing screen 3");
 
     setupCalendar();
 }
@@ -49,10 +51,17 @@ void ofApp::setupCalendar()
     ofRectangle window;
     window.setFromCenter(ofGetWidth() / 2, ofGetHeight() / 2, 480, ofGetHeight()-80);
     calendarWidget = CalendarWidget::makeShared(calendar, window);
+
+    bInited = false;
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
+
+    if((!bInited) && (ofGetFrameNum() > 300)) {
+        bInited = true;
+        loadXmlSettings();
+    }
 	
 
 }
@@ -96,12 +105,10 @@ void ofApp::draw(){
 }
 
 //--------------------------------------------------------------
-void ofApp::writeWord(int index, string newstring)
-{    
-    content[index] = newstring;
-			
+void ofApp::writeWord(int index)
+{
     ofLogNotice() << "screen" << index << ": " << content[index];
-    
+
     if(bUseSerial)
     {
         unsigned char buf[255];
@@ -111,20 +118,28 @@ void ofApp::writeWord(int index, string newstring)
         }
         if(index == 0)
             serial[0].writeBytes(buf,content[index].length());
-		else if(index == 1)
+        else if(index == 1)
             serial[1].writeBytes(buf,content[index].length());
-		else if(index == 2)
+        else if(index == 2)
             serial[2].writeBytes(buf,content[index].length());
     }
 }
 
 //--------------------------------------------------------------
-void ofApp::loadSettings()
+void ofApp::writeWord(int index, string newstring)
+{    
+    content[index] = newstring;
+			
+    writeWord(index);
+}
+
+//--------------------------------------------------------------
+void ofApp::loadSerialSettings()
 {
-	if(xml.load("settings.xml") ){
-		ofLogNotice() << "settings.xml loaded!";
+    if(xml.load("settings.xml") ){
+        ofLogNotice() << "settings.xml loaded!";
 	} else {
-		ofLogWarning() << "unable to load settings.xml";
+        ofLogWarning() << "unable to load settings.xml";
 	}
     
     if(xml.exists("//SERIAL0")) {
@@ -148,6 +163,37 @@ void ofApp::loadSettings()
     for(int i = 0; i < NUM_SCREENS; i++) {
 		ofLogNotice("loadSettings") << "Port " << i << ": " << serialName[i] ;
 	}
+
+}
+
+//--------------------------------------------------------------
+void ofApp::loadXmlSettings()
+{
+    if(xml.exists("//SCREEN1")) {
+        content[0] 	= xml.getValue<string>("//SCREEN1");
+    }
+    if(xml.exists("//SCREEN2")) {
+        content[1] 	= xml.getValue<string>("//SCREEN2");
+    }
+    if(xml.exists("//SCREEN3")) {
+        content[2] 	= xml.getValue<string>("//SCREEN3");
+    }
+    for(int i = 0; i < NUM_SCREENS; i++) {
+        writeWord(i);
+    }
+}
+
+//--------------------------------------------------------------
+void ofApp::saveXmlSettings()
+{
+    xml.setTo("CONTENT");
+
+    xml.setValue("SCREEN1", content[0]);
+    xml.setValue("SCREEN2", content[1]);
+    xml.setValue("SCREEN3", content[2]);
+
+    xml.save("settings.xml");
+
 }
 
 //--------------------------------------------------------------
@@ -212,6 +258,7 @@ void ofApp::processInstance(const ICalendarEventInstance& instance)
 
             ++iter;
         }
+        saveXmlSettings();
     }
 }
 

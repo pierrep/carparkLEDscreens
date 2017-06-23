@@ -11,6 +11,7 @@ using namespace ofx::Time;
 class ofApp : public ofBaseApp{
 	
 	public:
+        void exit();
 		void setup();
 		void update();
 		void draw();
@@ -24,7 +25,10 @@ class ofApp : public ofBaseApp{
         void onCalendarWatcherEventEnded(const ICalendarEventInstance& instance);
         void onCalendarWatcherError(const Poco::Exception& exception);
         void processInstance(const ICalendarEventInstance& instance);
-        void loadSettings();
+        void loadXmlSettings();
+        void saveXmlSettings();
+        void loadSerialSettings();
+        void writeWord(int index);
         void writeWord(int index, string content);
         void setupCalendar();
 
@@ -47,7 +51,7 @@ class ofApp : public ofBaseApp{
 
         bool        bUseSerial;
         bool        bUseXbee;
-        
+        bool        bInited;
         
 		ofXml 		xml;
 
