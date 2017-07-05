@@ -12,7 +12,7 @@ void ofApp::setup(){
     ofSetFrameRate(30);
 
     bUseXbee = false;
-    bUseSerial = false;
+    bUseSerial = true;
 
     loadSerialSettings();
     int baud = 115200;
