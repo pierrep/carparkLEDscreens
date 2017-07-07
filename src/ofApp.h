@@ -31,6 +31,7 @@ class ofApp : public ofBaseApp{
         void writeWord(int index);
         void writeWord(int index, string content);
         void setupCalendar();
+        string pad_right(string const& str, size_t s);
 
         /* calendar */
         ICalendar::SharedPtr calendar;
@@ -52,6 +53,8 @@ class ofApp : public ofBaseApp{
         bool        bUseSerial;
         bool        bUseXbee;
         bool        bInited;
+        bool        bReload;
+        bool        bDoScroll;
         
 		ofXml 		xml;
 

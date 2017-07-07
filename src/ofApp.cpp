@@ -6,6 +6,15 @@ void ofApp::exit()
     saveXmlSettings();
 }
 
+string ofApp::pad_right(string const& str, size_t s)
+{
+
+    if ( str.size() < s )
+        return str + std::string(s-str.size(), ' ');
+    else
+        return str;
+}
+
 //--------------------------------------------------------------
 void ofApp::setup(){
    // ofSetLogLevel(OF_LOG_VERBOSE);
@@ -13,6 +22,8 @@ void ofApp::setup(){
 
     bUseXbee = false;
     bUseSerial = true;
+    bReload = false;
+    bDoScroll = false;
 
     loadSerialSettings();
     int baud = 115200;
@@ -64,6 +75,10 @@ void ofApp::update(){
         loadXmlSettings();
     }
 	
+    if((bReload) && (ofGetFrameNum() > 300)) {
+        loadXmlSettings();
+        bReload = false;
+    }
 
 }
 
@@ -189,6 +204,27 @@ void ofApp::saveXmlSettings()
 {
     xml.setTo("CONTENT");
 
+    if(bDoScroll)
+    {
+        size_t padlen = 0;
+	if(content[0].size() > content[1].size())
+        {
+	    padlen = content[0].size();
+        } else {
+	    padlen = content[1].size();
+        }
+
+	if(content[2].size() > padlen)
+        {
+	    padlen = content[2].size();
+        } else {
+	    padlen = padlen;
+        }
+	
+        content[0] = pad_right(content[0], padlen);
+        content[1] = pad_right(content[1], padlen);
+        content[2] = pad_right(content[2], padlen);
+    }
     xml.setValue("SCREEN1", content[0]);
     xml.setValue("SCREEN2", content[1]);
     xml.setValue("SCREEN3", content[2]);
@@ -233,6 +269,8 @@ void ofApp::processInstance(const ICalendarEventInstance& instance)
 
         std::vector<std::string>::iterator iter = lines.begin();
 
+        bDoScroll = false;
+
         while (iter != lines.end())
         {
             std::vector<std::string> tokens = ofSplitString(*iter, "=", true, true);
@@ -241,15 +279,22 @@ void ofApp::processInstance(const ICalendarEventInstance& instance)
             {
                 if ((tokens[0] == "screen1") || (tokens[0] == "SCREEN1"))
                 {
-                   writeWord(0,tokens[1]);
+                   //writeWord(0,tokens[1]);
+		     content[0] = tokens[1];
                 }
                 else if ((tokens[0] == "screen2") || (tokens[0] == "SCREEN2"))
                 {
-                   writeWord(1,tokens[1]);
+                   //writeWord(1,tokens[1]);
+		     content[1] = tokens[1];
                 }
                 else if ((tokens[0] == "screen3") || (tokens[0] == "SCREEN3"))
                 {
-                   writeWord(2,tokens[1]);
+                   //writeWord(2,tokens[1]);
+		     content[2] = tokens[1];
+                }
+                else if ((tokens[0] == "scroll") || (tokens[0] == "SCROLL"))
+                {
+                     bDoScroll = true;
                 }
                 else
                 {
@@ -260,6 +305,7 @@ void ofApp::processInstance(const ICalendarEventInstance& instance)
             ++iter;
         }
         saveXmlSettings();
+	bReload = true;
     }
 }
 
