@@ -75,7 +75,7 @@ void ofApp::update(){
         loadXmlSettings();
     }
 	
-    if((bReload) && (ofGetFrameNum() > 300)) {
+    if((bReload) && (ofGetFrameNum() > 1500)) {
         loadXmlSettings();
         bReload = false;
     }
