@@ -56,6 +56,8 @@ class ofApp : public ofBaseApp{
         bool        bReload;
         bool        bDoScroll;
         
+        float 		curTime;
+        float 		prevTime;        
 		ofXml 		xml;
 
 };

@@ -17,7 +17,7 @@ string ofApp::pad_right(string const& str, size_t s)
 
 //--------------------------------------------------------------
 void ofApp::setup(){
-   // ofSetLogLevel(OF_LOG_VERBOSE);
+    ofSetLogLevel(OF_LOG_VERBOSE);
     ofSetFrameRate(30);
 
     bUseXbee = false;
@@ -69,17 +69,31 @@ void ofApp::setupCalendar()
 
 //--------------------------------------------------------------
 void ofApp::update(){
-
+	curTime = ofGetElapsedTimeMillis();
+	
     if((!bInited) && (ofGetFrameNum() > 300)) {
         bInited = true;
         loadXmlSettings();
     }
-	
-    if((bReload) && (ofGetFrameNum() > 1500)) {
+	else
+    if((bReload) && (curTime - prevTime > 4000)) {
+		ofLogNotice() << "Do Reload...";
         loadXmlSettings();
         bReload = false;
     }
-
+	else
+	if(bUseSerial) {
+		for(int i = 0; i < 3; i++) {
+			int receiveByte = 0;
+			receiveByte = serial[i].readByte();
+			if(receiveByte == 69) {
+				ofLogNotice() << "Error...Resend text!";
+				bReload = true;
+				curTime = prevTime = ofGetElapsedTimeMillis();
+				break;
+			}
+		}
+	}
 }
 
 //--------------------------------------------------------------
@@ -123,21 +137,28 @@ void ofApp::draw(){
 //--------------------------------------------------------------
 void ofApp::writeWord(int index)
 {
-    ofLogNotice() << "screen" << index << ": " << content[index];
+    ofLogNotice() << "screen" << index << ": " << content[index] << " length: " << content[index].length();
 
     if(bUseSerial)
     {
         unsigned char buf[255];
-        for(unsigned int i = 0; i < content[index].length();i++)
+        buf[0] = (uint8_t) 0
+        ;
+        unsigned int len = content[index].length();
+        for(unsigned int i = 1; i < len+1;i++)
         {
-            buf[i] = content[index].c_str()[i];
+            buf[i] = content[index].c_str()[i-1];
         }
+
+        buf[0] = (uint8_t) len;
+       // cout << "buf[0]" << buf[0] << endl;
+        len += 1;
         if(index == 0)
-            serial[0].writeBytes(buf,content[index].length());
+            serial[0].writeBytes(buf,len);
         else if(index == 1)
-            serial[1].writeBytes(buf,content[index].length());
+            serial[1].writeBytes(buf,len);
         else if(index == 2)
-            serial[2].writeBytes(buf,content[index].length());
+            serial[2].writeBytes(buf,len);
     }
 }
 
@@ -185,6 +206,7 @@ void ofApp::loadSerialSettings()
 //--------------------------------------------------------------
 void ofApp::loadXmlSettings()
 {
+	ofLogNotice() << "loading XML";
     if(xml.exists("//SCREEN1")) {
         content[0] 	= xml.getValue<string>("//SCREEN1");
     }
@@ -305,6 +327,7 @@ void ofApp::processInstance(const ICalendarEventInstance& instance)
             ++iter;
         }
         saveXmlSettings();
+    curTime = prevTime = ofGetElapsedTimeMillis();
 	bReload = true;
     }
 }
