@@ -2,5 +2,5 @@
 @pcmanfm --desktop --profile LXDE-pi
 @xscreensaver -no-splash
 @point-rpi
-#/home/pi/sketchbook/PulaPodTransmit/application.linux-armv6hf/PulaPodTransmit
+/home/pi/code/of_v0.9.8_linuxarmv6l_release/apps/LedScreenApps/carparkLEDscreens/bin/carparkLEDscreens
 
