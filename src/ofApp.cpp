@@ -16,7 +16,7 @@ string ofApp::pad_right(string const& str, size_t s)
 }
 
 //--------------------------------------------------------------
-void ofApp::setup(){
+void ofApp::setup(){  
     ofSetLogLevel(OF_LOG_VERBOSE);
     ofSetFrameRate(30);
 
@@ -73,10 +73,11 @@ void ofApp::update(){
 	
     if((!bInited) && (ofGetFrameNum() > 300)) {
         bInited = true;
+        ofLogNotice() << "Load initial settings...";
         loadXmlSettings();
     }
 	else
-    if((bReload) && (curTime - prevTime > 4000)) {
+    if((bReload) && (curTime - prevTime > 10000)) {
 		ofLogNotice() << "Do Reload...";
         loadXmlSettings();
         bReload = false;
@@ -151,7 +152,7 @@ void ofApp::writeWord(int index)
         }
 
         buf[0] = (uint8_t) len;
-       // cout << "buf[0]" << buf[0] << endl;
+
         len += 1;
         if(index == 0)
             serial[0].writeBytes(buf,len);
@@ -224,6 +225,7 @@ void ofApp::loadXmlSettings()
 //--------------------------------------------------------------
 void ofApp::saveXmlSettings()
 {
+	ofLogNotice() << "Saving XML settings";
     xml.setTo("CONTENT");
 
     if(bDoScroll)
@@ -272,6 +274,7 @@ void ofApp::mousePressed(int x, int y, int button)
 //--------------------------------------------------------------
 void ofApp::gotMessage(ofMessage msg)
 {
+	ofLogNotice() << "Got message: " << msg.message;
     messages.push_front(msg.message);
 
     while (messages.size() > MAX_MESSAGES)
@@ -286,6 +289,8 @@ void ofApp::processInstance(const ICalendarEventInstance& instance)
     if (instance.isValidEventInstance())
     {
         std::string description = instance.getEvent().getDescription();
+        
+        ofLogNotice() << description << endl;
 
         std::vector<std::string> lines = ofSplitString(description, "\n", true, true);
 
@@ -302,17 +307,20 @@ void ofApp::processInstance(const ICalendarEventInstance& instance)
                 if ((tokens[0] == "screen1") || (tokens[0] == "SCREEN1"))
                 {
                    //writeWord(0,tokens[1]);
-		     content[0] = tokens[1];
+					content[0] = tokens[1];
+					ofLogNotice() << " Received text: " << tokens[1];
                 }
                 else if ((tokens[0] == "screen2") || (tokens[0] == "SCREEN2"))
                 {
                    //writeWord(1,tokens[1]);
-		     content[1] = tokens[1];
+					content[1] = tokens[1];
+					ofLogNotice() << " Received text: " << tokens[1];
                 }
                 else if ((tokens[0] == "screen3") || (tokens[0] == "SCREEN3"))
                 {
                    //writeWord(2,tokens[1]);
-		     content[2] = tokens[1];
+					content[2] = tokens[1];
+					ofLogNotice() << " Received text: " << tokens[1];
                 }
                 else if ((tokens[0] == "scroll") || (tokens[0] == "SCROLL"))
                 {
@@ -327,16 +335,24 @@ void ofApp::processInstance(const ICalendarEventInstance& instance)
             ++iter;
         }
         saveXmlSettings();
-    curTime = prevTime = ofGetElapsedTimeMillis();
-	bReload = true;
-    }
+		curTime = prevTime = ofGetElapsedTimeMillis();
+		bReload = true;
+    } else {
+		ofLogError() << "Invalid event instance...";
+	}
 }
 
 //--------------------------------------------------------------
 void ofApp::onCalendarWatcherEventAdded(const ICalendarEventInstance& instance)
 {
     ofSendMessage("ADDED: " + instance.getEvent().getSummary() );
-
+    
+    std::time_t startTime = instance.getInterval().getStart().epochTime();
+	ofLogNotice() << "event start: " << startTime;
+	
+	std::time_t endTime = instance.getInterval().getEnd().epochTime();
+	ofLogNotice() << "event end: " << endTime;	
+    
     processInstance(instance);
 }
 
